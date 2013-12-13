@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Find subnets
+subnets=$(ifconfig | grep -o "[0-9]\?[0-9]\?[0-9]\.[0-9]\?[0-9]\?[0-9]\.[0-9]\?[0-9]\?[0-9]" | uniq | grep -v "^127")
+
+if [[ $subnets == "" ]]; then
+	echo "No subnets found. Are you connected to a network?"
+	exit 1
+fi
+
+# Scan subnets
+echo "Scanning subnets: $subnets.*"
+
+for subnet in $subnets; do
+	pis=$(nmap -A -T4 --max-parallelism 200 -p22 $subnet.1-255 2>/dev/null | grep -B3 open | head -n 1 | sed 's/Nmap scan report for \(.*\)/\1/')
+	for pi in $pis; do
+		echo "Found pi at $pi"
+	done
+done
